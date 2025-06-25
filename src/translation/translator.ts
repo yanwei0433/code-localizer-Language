@@ -439,7 +439,7 @@ export async function translateWithLocalLLM(request: TranslationRequest): Promis
     const config = vscode.workspace.getConfiguration('codeLocalizer');
     const provider = config.get<string>('translationService.provider', 'ollamaApi');
     const ollamaApiUrl = config.get<string>('translationService.ollamaApiUrl', 'http://localhost:11434');
-    const ollamaModelName = config.get<string>('translationService.ollamaModelName', '');
+    const ollamaModelName = config.get<string>('translationService.ollamaModelName', 'gemma3:4b');
     const llmPath = config.get<string>('translationService.llmPath', '');
     const llmParams = config.get<string>('translationService.llmParams', '');
 

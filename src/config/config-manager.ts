@@ -94,7 +94,7 @@ export function getLLMConfig() {
     return {
         provider: 'ollamaApi',
         apiUrl: config.get<string>('translationService.ollamaApiUrl', 'http://localhost:11434'),
-        modelName: config.get<string>('translationService.ollamaModelName', '')
+        modelName: config.get<string>('translationService.ollamaModelName', 'gemma3:4b')
     };
 }
 
@@ -152,9 +152,9 @@ export async function configLocalLLM(): Promise<void> { // 函数名保持不变
             } else { // 用户可能取消了选择，或者列表为空时直接按了回车，此时我们检查是否需要手动输入
                 const currentModelName = config.get<string>('translationService.ollamaModelName', '');
                 const newModelName = await vscode.window.showInputBox({
-                    prompt: '请输入Ollama模型名称 (例如 gemma:2b)',
+                    prompt: '请输入Ollama模型名称 (例如 gemma3:4b)',
                     value: currentModelName, // 保留当前值或空字符串
-                    placeHolder: 'gemma:2b, llama3',
+                    placeHolder: 'gemma3:4b, llama3',
                     title: 'Ollama模型手动设置'
                 });
 
@@ -178,7 +178,7 @@ export async function configLocalLLM(): Promise<void> { // 函数名保持不变
             const newModelName = await vscode.window.showInputBox({
                 prompt: '无法获取Ollama模型列表，请手动输入模型名称',
                 value: currentModelName,
-                placeHolder: 'gemma:2b, llama3',
+                placeHolder: 'gemma3:4b, llama3',
                 title: 'Ollama模型手动设置'
             });
             

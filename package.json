@@ -29,81 +29,81 @@
     "commands": [
       {
         "command": "codeLocalizer.extractCurrentFile",
-        "title": "提取文件中的词汇"
+        "title": "%extractCurrentFile.title%"
       },
       {
         "command": "codeLocalizer.testCollector",
-        "title": "测试识别器"
+        "title": "%testCollector.title%"
       },
       {
         "command": "codeLocalizer.showTargetLanguage",
-        "title": "显示当前目标语言"
+        "title": "%showTargetLanguage.title%"
       },
       {
         "command": "codeLocalizer.setTargetLanguage",
-        "title": "设置目标语言"
+        "title": "%setTargetLanguage.title%"
       },
       {
         "command": "codeLocalizer.clearVocabulary",
-        "title": "清除词汇表"
+        "title": "%clearVocabulary.title%"
       },
       {
         "command": "codeLocalizer.configLocalLLM",
-        "title": "配置本地LLM设置"
+        "title": "%configLocalLLM.title%"
       },
       {
         "command": "codeLocalizer.translateSelected",
-        "title": "翻译选中的标识符"
+        "title": "%translateSelected.title%"
       },
       {
         "command": "codeLocalizer.showTranslationPreview",
-        "title": "查看翻译结果"
+        "title": "%showTranslationPreview.title%"
       },
       {
         "command": "codeLocalizer.showContributionStats",
-        "title": "显示翻译贡献统计"
+        "title": "%showContributionStats.title%"
       },
       {
         "command": "codeLocalizer.showExtractedItems",
-        "title": "查看提取结果"
+        "title": "%showExtractedItems.title%"
       },
       {
         "command": "codeLocalizer.clearTempVocabulary",
-        "title": "清除缓存"
+        "title": "%clearTempVocabulary.title%"
       },
       {
         "command": "codeLocalizer.toggleMotherTongueDisplay",
-        "title": "切换代码母语显示"
+        "title": "%toggleMotherTongueDisplay.title%"
       },
       {
         "command": "codeLocalizer.refreshMotherTongueDisplay",
-        "title": "刷新代码母语显示"
+        "title": "%refreshMotherTongueDisplay.title%"
       },
       {
         "command": "codeLocalizer.clearDecorationCache",
-        "title": "清理装饰缓存"
+        "title": "%clearDecorationCache.title%"
       },
       {
         "command": "codeLocalizer.manageBlacklist",
-        "title": "管理技术术语黑名单"
+        "title": "%manageBlacklist.title%"
       },
       {
         "command": "codeLocalizer.addToBlacklist",
-        "title": "添加当前选中的标识符到黑名单"
+        "title": "%addToBlacklist.title%"
       },
       {
         "command": "codeLocalizer.editBlacklistInSettings",
-        "title": "编辑黑名单文件"
+        "title": "%editBlacklistInSettings.title%"
       },
       {
         "command": "codeLocalizer.organizeVocabulary",
-        "title": "整理词汇表"
+        "title": "%organizeVocabulary.title%"
       }
     ],
     "submenus": [
       {
         "id": "codeLocalizer.contextMenu",
-        "label": "代码本地化"
+        "label": "%codeLocalizer.contextMenu.label%"
       }
     ],
     "menus": {
@@ -168,44 +168,44 @@
     },
     "configuration": {
       "type": "object",
-      "title": "Code Localizer Configuration",
+      "title": "%configuration.title%",
       "properties": {
         "codeLocalizer.targetLanguage": {
           "type": "string",
           "default": "zh-CN",
-          "description": "目标翻译语言代码 (例如: zh-CN, ja, fr, es)。"
+          "description": "%targetLanguage.description%"
         },
         "codeLocalizer.autoContributeTranslations": {
           "type": "boolean",
           "default": false,
-          "description": "是否自动将用户的翻译贡献到远程服务器（如果实现）。"
+          "description": "%autoContributeTranslations.description%"
         },
         "codeLocalizer.translationService.provider": {
           "type": "string",
           "enum": ["ollamaApi"],
           "default": "ollamaApi",
-          "description": "翻译服务提供商: 'ollamaApi' (使用Ollama API，推荐)。"
+          "description": "%translationService.provider.description%"
         },
         "codeLocalizer.translationService.ollamaApiUrl": {
           "type": "string",
           "default": "http://localhost:11434",
-          "description": "Ollama API的基础URL (默认: http://localhost:11434)。"
+          "description": "%translationService.ollamaApiUrl.description%"
         },
         "codeLocalizer.translationService.ollamaModelName": {
           "type": "string",
-          "default": "",
-          "description": "要使用的Ollama模型名称 (例如: gemma:2b)。留空将根据目标语言自动选择合适的模型。"
+          "default": "gemma3:4b",
+          "description": "%translationService.ollamaModelName.description%"
         },
         "codeLocalizer.enableMotherTongueDisplay": {
           "type": "boolean",
           "default": true,
-          "description": "是否启用代码母语显示。启用后，代码标识符将以目标语言显示。"
+          "description": "%enableMotherTongueDisplay.description%"
         },
         "codeLocalizer.motherTongueDisplayStyle": {
           "type": "string",
           "enum": ["overlay", "hover", "inlineHint"],
           "default": "overlay",
-          "description": "母语显示样式: 'overlay' (覆盖原始标识符), 'hover' (仅在悬停时显示), 'inlineHint' (作为内联提示显示)。"
+          "description": "%motherTongueDisplayStyle.description%"
         }
       }
     }
