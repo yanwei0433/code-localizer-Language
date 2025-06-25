@@ -339,23 +339,31 @@ async function applyOverlayDecorations(
     
     // 处理新出现的标识符
     for (const id of identifiers) {
+        // 新增：跳过注释区的标识符
+        if (isInComment(document, id.range.start)) {
+            continue; // 跳过注释区内容
+        }
         const key = getIdentifierCacheKey(documentUri, id.range.start, id.range.end, document.version);
         identifierKeys.add(key);
         
         if (identifierDecorationCache.has(key)) {
             // 命中缓存
             const cachedDecoration = identifierDecorationCache.get(key)!;
-            allDecorations.push(cachedDecoration);
+            if (cachedDecoration) { // 新增：只添加有效装饰对象
+                allDecorations.push(cachedDecoration);
+            }
             console.log(`[CodeLocalizer][缓存命中] ${id.text} @ ${key}`);
         } else {
             // 未命中缓存，需翻译并生成装饰
             const deco = await createDecorationForIdentifier(id, vocabulary);
-            identifierDecorationCache.set(key, deco);
-            newDecorations.push(deco);
-            allDecorations.push(deco);
-            // 添加到持久化状态
-            persistentDecorations.add(key);
-            console.log(`[CodeLocalizer][缓存未命中] ${id.text} @ ${key}`);
+            if (deco) { // 新增：只添加有效装饰对象
+                identifierDecorationCache.set(key, deco);
+                newDecorations.push(deco);
+                allDecorations.push(deco);
+                // 添加到持久化状态
+                persistentDecorations.add(key);
+                console.log(`[CodeLocalizer][缓存未命中] ${id.text} @ ${key}`);
+            }
         }
     }
     
@@ -555,6 +563,8 @@ function renderCachedDecorations(editor: vscode.TextEditor) {
         let offset = editor.document.offsetAt(range.start);
         while ((match = regex.exec(text)) !== null) {
             const identifier = match[0];
+            // 新增：路径/URL过滤
+            if (isPathOrUrl(identifier)) continue; // 跳过路径/URL
             const start = editor.document.positionAt(offset + match.index);
             const end = editor.document.positionAt(offset + match.index + identifier.length);
             const key = `${documentUri}:${start.line}:${start.character}-${end.line}:${end.character}@${documentVersion}`;
@@ -658,6 +668,31 @@ function extractIdentifiersInRanges(document: vscode.TextDocument, visibleRanges
  * 为单个标识符生成装饰对象
  */
 async function createDecorationForIdentifier(id: {text: string, range: vscode.Range}, vocabulary: Vocabulary): Promise<vscode.DecorationOptions> {
+    // 新增：如果标识符处于路径/URL字符串字面量内，则跳过装饰
+    const document = vscode.window.activeTextEditor?.document;
+    if (document) {
+        const lineText = document.lineAt(id.range.start.line).text;
+        // 匹配字符串字面量（支持单引号、双引号、反引号）
+        const stringRegex = /(["'`])((?:\\.|(?!\1)[^\\])*?)\1/g;
+        let match;
+        while ((match = stringRegex.exec(lineText)) !== null) {
+            const strStart = match.index;
+            const strEnd = stringRegex.lastIndex;
+            if (id.range.start.character >= strStart && id.range.start.character < strEnd) {
+                // 在字符串字面量内
+                const strContent = match[2];
+                if (isPathOrUrl(strContent)) {
+                    // 跳过路径/URL字符串内的内容
+                    return undefined as any;
+                }
+            }
+        }
+    }
+    // 新增：跳过路径或URL类型的字符串
+    if (isPathOrUrl(id.text)) {
+        // 跳过路径或URL，不进行装饰
+        return undefined as any;
+    }
     // 复用已有的翻译和高亮逻辑
     let translated = handleCompoundIdentifier(id.text, vocabulary, getTranslation);
     if (!translated) translated = id.text;
