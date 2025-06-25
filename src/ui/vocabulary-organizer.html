@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 极度宽松的CSP，仅用于调试 -->
+    <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline'; img-src * data:; connect-src *;">
+    <title>词汇表整理</title>
+    <style>
+        :root {
+            --vscode-background: var(--vscode-editor-background, #1e1e1e);
+            --vscode-foreground: var(--vscode-editor-foreground, #d4d4d4);
+            --vscode-button-background: var(--vscode-button-background, #0e639c);
+            --vscode-button-foreground: var(--vscode-button-foreground, white);
+            --vscode-button-hover-background: var(--vscode-button-hoverBackground, #1177bb);
+            --vscode-list-hoverBackground: var(--vscode-list-hoverBackground, #2a2d2e);
+            --vscode-input-background: var(--vscode-input-background, #3c3c3c);
+            --vscode-input-foreground: var(--vscode-input-foreground, #cccccc);
+            --vscode-input-border: var(--vscode-input-border, #3c3c3c);
+            --vscode-border: var(--vscode-panel-border, #80808059);
+            --vscode-accent: var(--vscode-focusBorder, #007fd4);
+            --vscode-icon-color: var(--vscode-icon-foreground, #c5c5c5);
+            --vscode-checkbox-background: var(--vscode-checkbox-background, #3c3c3c);
+            --vscode-checkbox-foreground: var(--vscode-checkbox-foreground, #cccccc);
+            --vscode-checkbox-border: var(--vscode-checkbox-border, #3c3c3c);
+            --custom-background: #3a3a3a;
+            --custom-list-background: #424242;
+            --custom-item-background: #4a4a4a;
+            --custom-hover-background: #555555;
+            --custom-border-color: #666666;
+        }
+        body {
+            font-family: var(--vscode-font-family, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif);
+            padding: 20px;
+            background-color: var(--custom-background);
+            color: #f0f0f0;
+            line-height: 1.5;
+            user-select: none;
+        }
+        h1 {
+            color: #ffffff;
+            font-size: 1.6em;
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--custom-border-color);
+        }
+        .stats-bar {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: var(--custom-list-background);
+            border-radius: 4px;
+            border: 1px solid var(--custom-border-color);
+        }
+        .stat-item {
+            text-align: center;
+            flex: 1;
+        }
+        .stat-number {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #78b0fa;
+        }
+        .stat-label {
+            font-size: 0.9em;
+            color: #cccccc;
+        }
+        .filter-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+        .filter-input {
+            flex: 1;
+            padding: 8px 12px;
+            background-color: var(--vscode-input-background);
+            color: var(--vscode-input-foreground);
+            border: 1px solid var(--vscode-input-border);
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .filter-input:focus {
+            outline: none;
+            border-color: var(--vscode-accent);
+        }
+        .filter-select {
+            padding: 8px 12px;
+            background-color: var(--vscode-input-background);
+            color: var(--vscode-input-foreground);
+            border: 1px solid var(--vscode-input-border);
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .item-list {
+            max-height: 500px;
+            overflow-y: auto;
+            border: 1px solid var(--custom-border-color);
+            padding: 10px;
+            background-color: var(--custom-list-background);
+            border-radius: 4px;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+        }
+        .item {
+            padding: 8px 10px;
+            border-bottom: 1px solid var(--custom-border-color);
+            font-family: var(--vscode-editor-font-family, 'Consolas', 'Courier New', monospace);
+            display: flex;
+            align-items: center;
+            position: relative;
+            background-color: var(--custom-item-background);
+            margin-bottom: 4px;
+            border-radius: 3px;
+        }
+        .item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        .item:hover {
+            background-color: var(--custom-hover-background);
+        }
+        .item-original {
+            flex-shrink: 0;
+            font-weight: bold;
+            color: #ffffff;
+            min-width: 120px;
+        }
+        .item-translated {
+            flex-grow: 1;
+            cursor: text;
+            padding: 2px 5px;
+            border-radius: 3px;
+            user-select: text;
+            color: #ffffff;
+            margin: 0 8px;
+        }
+        .item-editable.editing {
+            background-color: #333333;
+            color: #ffffff;
+            border: 1px solid var(--vscode-accent);
+            outline: none;
+            padding: 2px 5px;
+        }
+        .item-type {
+            flex-shrink: 0;
+            color: #78b0fa;
+            font-size: 0.9em;
+            min-width: 80px;
+        }
+        .item-source {
+            flex-shrink: 0;
+            color: #cccccc;
+            font-size: 0.9em;
+            min-width: 60px;
+        }
+        .item-actions {
+            display: flex;
+            gap: 8px;
+            opacity: 0.5;
+            transition: opacity 0.2s;
+        }
+        .item:hover .item-actions {
+            opacity: 1;
+        }
+        .action-btn {
+            background: none;
+            border: none;
+            color: var(--vscode-icon-color);
+            cursor: pointer;
+            font-size: 14px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            outline: none;
+        }
+        .action-btn:hover {
+            background-color: var(--vscode-button-background);
+            color: var(--vscode-button-foreground);
+        }
+        .delete-btn:hover {
+            background-color: #d32f2f;
+        }
+        .header-actions {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .select-all-container {
+            display: flex;
+            align-items: center;
+        }
+        .select-all-checkbox {
+            margin-right: 5px;
+        }
+        .button-container {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        button {
+            padding: 8px 20px;
+            background-color: #0078d4;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background-color: #106ebe;
+        }
+        button:disabled {
+            background-color: #5a5a5a;
+            cursor: not-allowed;
+        }
+        .secondary {
+            background-color: #5a5a5a;
+            color: white;
+            border: 1px solid #666666;
+        }
+        .danger {
+            background-color: #d32f2f;
+        }
+        .danger:hover {
+            background-color: #b71c1c;
+        }
+        .info-message {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            margin-top: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        .info-message.error {
+            background-color: #f44336;
+        }
+        .empty-state {
+            text-align: center;
+            color: #888;
+            padding: 20px;
+            font-style: italic;
+        }
+        .item-checkbox {
+            margin-right: 8px;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border: 1px solid var(--vscode-checkbox-border);
+            background-color: var(--vscode-checkbox-background);
+            border-radius: 3px;
+            position: relative;
+        }
+        /* 新增：选中状态的背景色和边框色 */
+        .item-checkbox:checked {
+            background-color: var(--vscode-button-background);
+            border-color: var(--vscode-button-background);
+        }
+        /* 新增：选中状态的对号样式 */
+        .item-checkbox:checked::after {
+            content: '✓';
+            position: absolute;
+            color: var(--vscode-button-foreground);
+            font-size: 12px;
+            top: -1px;
+            left: 2px;
+        }
+    </style>
+</head>
+<body>
+    <h1>词汇表整理</h1>
+    
+    <div class="stats-bar">
+        <div class="stat-item">
+            <div class="stat-number" id="totalCount">0</div>
+            <div class="stat-label">总条目</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number" id="identifierCount">0</div>
+            <div class="stat-label">标识符</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number" id="commentCount">0</div>
+            <div class="stat-label">注释</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number" id="modifiedCount">0</div>
+            <div class="stat-label">已修改</div>
+        </div>
+    </div>
+
+    <div class="filter-bar">
+        <input type="text" id="searchInput" class="filter-input" placeholder="搜索原文或译文...">
+        <select id="typeFilter" class="filter-select">
+            <option value="">所有类型</option>
+            <option value="identifier">标识符</option>
+            <option value="comment">注释</option>
+        </select>
+        <select id="sourceFilter" class="filter-select">
+            <option value="">所有来源</option>
+            <option value="user">用户</option>
+            <option value="ai">AI</option>
+            <option value="llm">LLM</option>
+        </select>
+    </div>
+
+    <div class="info-message" id="infoMessage" style="display: none;"></div>
+    
+    <div class="header-actions">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <label class="select-all-container">
+                <input type="checkbox" id="select-all-checkbox" class="select-all-checkbox">
+                <span>全选</span>
+            </label>
+            <button id="batchDeleteButton" class="action-button" disabled>批量删除选中项</button>
+            <button id="exportSelectedButton" class="action-button" disabled>导出选中项</button>
+        </div>
+        <button id="add-entry-btn" style="background-color:#4CAF50;">➕ 添加条目</button>
+    </div>
+
+    <div class="item-list" id="vocabulary-list">
+        <!-- 词汇表条目将由JS动态渲染 -->
+    </div>
+
+    <div class="button-container">
+        <button id="save-btn">保存到文件</button>
+        <button id="export-btn" class="secondary">导出全部</button>
+        <button id="close-btn" class="secondary">关闭</button>
+    </div>
+
+    <script>
+        console.log('--- Debug: vocabulary-organizer.html script loaded ---');
+        const vscode = acquireVsCodeApi();
+        let vocabularyEntries = [];
+        let filteredEntries = [];
+        let modifiedEntries = {};
+        let deletedItems = [];
+        let currentEditingElement = null;
+        let selectedMap = Object.create(null);
+        let searchFilter = '';
+        let typeFilter = '';
+        let sourceFilter = '';
+
+        // 监听来自扩展的消息
+        window.addEventListener('message', event => {
+            const message = event.data;
+            switch (message.command) {
+                case 'setVocabularyEntries':
+                    // 重置所有状态变量，确保每次都是全新加载
+                    vocabularyEntries = [];
+                    filteredEntries = [];
+                    modifiedEntries = {};
+                    deletedItems = [];
+                    currentEditingElement = null;
+                    selectedMap = Object.create(null);
+                    
+                    vocabularyEntries = message.entries || [];
+                    // 初始化勾选状态为全部不选
+                    selectedMap = Object.create(null);
+                    applyFilters();
+                    renderList();
+                    updateStats();
+                    updateSelectAllCheckbox();
+                    updateBatchButtons();
+                    break;
+                case 'showMessage':
+                    showMessage(message.message, message.type);
+                    break;
+            }
+        });
+
+        function showMessage(message, type = 'success') {
+            const infoMessage = document.getElementById('infoMessage');
+            infoMessage.textContent = message;
+            infoMessage.className = `info-message ${type === 'error' ? 'error' : ''}`;
+            infoMessage.style.display = 'block';
+            
+            setTimeout(() => {
+                infoMessage.style.display = 'none';
+            }, 3000);
+        }
+
+        function applyFilters() {
+            filteredEntries = vocabularyEntries.filter(item => {
+                // 搜索过滤
+                if (searchFilter) {
+                    const searchLower = searchFilter.toLowerCase();
+                    if (!item.original.toLowerCase().includes(searchLower) && 
+                        !item.translated.toLowerCase().includes(searchLower)) {
+                        return false;
+                    }
+                }
+                
+                // 类型过滤
+                if (typeFilter && item.type !== typeFilter) {
+                    return false;
+                }
+                
+                // 来源过滤
+                if (sourceFilter && item.source !== sourceFilter) {
+                    return false;
+                }
+                
+                return true;
+            });
+        }
+
+        function renderList() {
+            const vocabularyList = document.getElementById('vocabulary-list');
+            if (!vocabularyList) return;
+            
+            vocabularyList.innerHTML = '';
+            
+            if (filteredEntries.length === 0) {
+                const emptyState = document.createElement('div');
+                emptyState.className = 'empty-state';
+                emptyState.textContent = searchFilter || typeFilter || sourceFilter ? '没有找到匹配的条目' : '词汇表为空';
+                vocabularyList.appendChild(emptyState);
+            } else {
+                filteredEntries.forEach((item, index) => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'item';
+                    itemDiv.setAttribute('data-original', item.original);
+
+                    itemDiv.innerHTML = `
+                        <input type="checkbox" class="item-checkbox" ${selectedMap[item.original] ? 'checked' : ''}>
+                        <span class="item-original item-editable" contenteditable="false" data-field="original" data-initial-value="${item.original}">${item.original}</span>
+                        <span class="item-translated item-editable" contenteditable="false" data-field="translated" data-initial-value="${item.translated}">${item.translated}</span>
+                        <span class="item-type item-editable" contenteditable="false" data-field="type" data-initial-value="${item.type || 'identifier'}">${item.type || 'identifier'}</span>
+                        <span class="item-source item-editable" contenteditable="false" data-field="source" data-initial-value="${item.source || 'user'}">${item.source || 'user'}</span>
+                        <div class="item-actions">
+                            <button class="action-btn edit-btn" title="编辑">✏️</button>
+                            <button class="action-btn delete-btn" title="删除">🗑️</button>
+                        </div>
+                    `;
+
+                    vocabularyList.appendChild(itemDiv);
+                });
+            }
+        }
+
+        function updateStats() {
+            const totalCount = vocabularyEntries.length;
+            const identifierCount = vocabularyEntries.filter(item => item.type === 'identifier').length;
+            const commentCount = vocabularyEntries.filter(item => item.type === 'comment').length;
+            const modifiedCount = Object.keys(modifiedEntries).length;
+
+            document.getElementById('totalCount').textContent = totalCount;
+            document.getElementById('identifierCount').textContent = identifierCount;
+            document.getElementById('commentCount').textContent = commentCount;
+            document.getElementById('modifiedCount').textContent = modifiedCount;
+        }
+
+        // 搜索和过滤功能
+        document.getElementById('searchInput').addEventListener('input', function() {
+            searchFilter = this.value;
+            applyFilters();
+            renderList();
+            updateSelectAllCheckbox();
+            updateBatchButtons();
+        });
+
+        document.getElementById('typeFilter').addEventListener('change', function() {
+            typeFilter = this.value;
+            applyFilters();
+            renderList();
+            updateSelectAllCheckbox();
+            updateBatchButtons();
+        });
+
+        document.getElementById('sourceFilter').addEventListener('change', function() {
+            sourceFilter = this.value;
+            applyFilters();
+            renderList();
+            updateSelectAllCheckbox();
+            updateBatchButtons();
+        });
+
+        // 全局事件委托，处理单个复选框的变化
+        document.addEventListener('change', function(event) {
+            if (event.target.classList.contains('item-checkbox')) {
+                const originalValue = event.target.closest('.item').getAttribute('data-original');
+                selectedMap[originalValue] = event.target.checked;
+                updateSelectAllCheckbox();
+                updateBatchButtons();
+            }
+        });
+
+        // 全局事件委托，处理编辑和删除按钮点击
+        document.addEventListener('click', function(event) {
+            if (event.target.classList.contains('edit-btn')) {
+                const itemDiv = event.target.closest('.item');
+                const originalTextSpan = itemDiv.querySelector('.item-original');
+                const translatedTextSpan = itemDiv.querySelector('.item-translated');
+                const typeTextSpan = itemDiv.querySelector('.item-type');
+                const sourceTextSpan = itemDiv.querySelector('.item-source');
+
+                if (originalTextSpan && translatedTextSpan && typeTextSpan && sourceTextSpan) {
+                    enterEditMode(originalTextSpan, translatedTextSpan, typeTextSpan, sourceTextSpan, event.target);
+                }
+            } else if (event.target.classList.contains('save-btn')) {
+                if (currentEditingElement) {
+                    saveEditing(currentEditingElement);
+                } else {
+                    // Fallback in case currentEditingElement is null
+                    const itemDiv = event.target.closest('.item');
+                    saveEditing(itemDiv.querySelector('.item-original'));
+                }
+                exitEditMode(); // 保存后退出编辑模式
+            } else if (event.target.classList.contains('delete-btn')) {
+                const original = event.target.closest('.item').getAttribute('data-original');
+                handleDeleteItem(original);
+            }
+        });
+
+        // 全选/全不选功能
+        document.getElementById('select-all-checkbox').addEventListener('change', function() {
+            const checked = this.checked;
+            filteredEntries.forEach(item => {
+                selectedMap[item.original] = checked;
+            });
+            renderList();
+            updateBatchButtons();
+        });
+
+        function updateSelectAllCheckbox() {
+            const selectAll = document.getElementById('select-all-checkbox');
+            const total = filteredEntries.length;
+            const selected = Object.values(selectedMap).filter(Boolean).length;
+            selectAll.checked = selected === total && total > 0;
+            selectAll.indeterminate = selected > 0 && selected < total;
+        }
+
+        function updateBatchButtons() {
+            const selectedCount = Object.values(selectedMap).filter(Boolean).length;
+            document.getElementById('batchDeleteButton').disabled = selectedCount === 0;
+            document.getElementById('exportSelectedButton').disabled = selectedCount === 0;
+        }
+
+        // 批量删除
+        document.getElementById('batchDeleteButton').addEventListener('click', function() {
+            const toDelete = filteredEntries.filter(item => selectedMap[item.original]);
+            toDelete.forEach(item => handleDeleteItem(item.original));
+        });
+
+        // 导出选中项
+        document.getElementById('exportSelectedButton').addEventListener('click', function() {
+            const selectedItems = filteredEntries.filter(item => selectedMap[item.original]);
+            vscode.postMessage({
+                command: 'exportSelected',
+                items: selectedItems
+            });
+        });
+
+        function handleDeleteItem(original) {
+            // 从词汇表中移除
+            vocabularyEntries = vocabularyEntries.filter(item => item.original !== original);
+            deletedItems.push(original);
+            delete selectedMap[original];
+            delete modifiedEntries[original];
+            applyFilters();
+            renderList();
+            updateStats();
+            updateSelectAllCheckbox();
+            updateBatchButtons();
+        }
+
+        // enterEditMode 接收被点击的元素和可选的按钮元素
+        function enterEditMode(originalTextSpan, translatedTextSpan, typeTextSpan, sourceTextSpan, editBtn = null) {
+            // 先保存上一个编辑中的元素
+            if (currentEditingElement) {
+                saveEditing(currentEditingElement);
+            }
+            // 记录当前编辑元素（用原文span做主控）
+            currentEditingElement = originalTextSpan;
+            // 让所有可编辑字段进入编辑状态
+            [originalTextSpan, translatedTextSpan, typeTextSpan, sourceTextSpan].forEach(span => {
+                span.contentEditable = 'true';
+                span.classList.add('editing');
+            });
+            originalTextSpan.focus();
+            // 只修改按钮内容，不移动按钮位置
+            const itemDiv = originalTextSpan.closest('.item');
+            const targetEditBtn = editBtn || itemDiv.querySelector('.edit-btn, .save-btn');
+            if (targetEditBtn) {
+                targetEditBtn.textContent = '💾';
+                targetEditBtn.title = '保存';
+                targetEditBtn.classList.remove('edit-btn');
+                targetEditBtn.classList.add('save-btn');
+            }
+        }
+
+        function saveEditing(element) {
+            console.log('[Webview Debug] saveEditing called with element:', element);
+            if (!element) {
+                console.log('[Webview Debug] saveEditing: Element is null, returning.');
+                return;
+            }
+
+            const itemDiv = element.closest('.item');
+            if (!itemDiv) {
+                console.log('[Webview Debug] saveEditing: Item div not found, returning.');
+                return;
+            }
+
+            const originalOriginalValue = itemDiv.getAttribute('data-original'); // 原始的original值
+
+            let entryIndex = vocabularyEntries.findIndex(e => e.original === originalOriginalValue);
+            if (entryIndex === -1) {
+                console.warn('[Webview Debug] saveEditing: Original entry not found in vocabularyEntries.');
+                return;
+            }
+            
+            let currentEntry = { ...vocabularyEntries[entryIndex] }; // 克隆一份当前词条用于更新
+
+            let hasChanged = false;
+
+            // 遍历所有可编辑字段，更新内存中的数据
+            itemDiv.querySelectorAll('.item-editable').forEach(span => {
+                const field = span.getAttribute('data-field');
+                const newValue = span.textContent.trim();
+                const initialValue = span.getAttribute('data-initial-value');
+
+                if (newValue !== initialValue) {
+                    if (field === 'original' && newValue !== currentEntry.original) {
+                        // 如果 original 字段被修改，需要特殊处理
+                        // 如果原始 original 已经被修改且存在于 modifiedEntries，则需要删除旧的 modifiedEntries 键
+                        if (originalOriginalValue in modifiedEntries && originalOriginalValue !== newValue) {
+                            delete modifiedEntries[originalOriginalValue];
+                        }
+                        // 更新 selectedMap 的键
+                        if (selectedMap[originalOriginalValue] !== undefined) {
+                            selectedMap[newValue] = selectedMap[originalOriginalValue];
+                            delete selectedMap[originalOriginalValue];
+                        }
+                        // 在 vocabularyEntries 中更新 original 字段
+                        currentEntry.original = newValue;
+                        itemDiv.setAttribute('data-original', newValue); // 更新itemDiv的data-original属性
+                    } else if (field === 'translated' || field === 'type' || field === 'source') {
+                        currentEntry[field] = newValue;
+                    }
+                    modifiedEntries[currentEntry.original] = currentEntry.translated; // 使用更新后的original作为键
+                    hasChanged = true;
+                    span.setAttribute('data-initial-value', newValue); // 更新元素的初始值属性
+                }
+            });
+
+            if (hasChanged) {
+                vocabularyEntries[entryIndex] = currentEntry; // 更新 vocabularyEntries 中的对象
+                updateStats(); // 只更新统计信息，不触发后端保存
+                console.log('[Webview Debug] saveEditing: Entry updated in memory:', currentEntry);
+            } else {
+                console.log('[Webview Debug] saveEditing: No content changed for', originalOriginalValue);
+            }
+
+            // 退出编辑模式的逻辑将移到点击事件监听器中，以与提取页一致
+            // exitEditMode(); // 移除此行
+            // console.log('[Webview Debug] saveEditing: exitEditMode() called.'); // 移除此行
+
+            // 直接在此处处理退出编辑模式的UI逻辑
+            if (itemDiv) {
+                const editableSpans = itemDiv.querySelectorAll('.item-editable');
+                editableSpans.forEach(span => {
+                    span.contentEditable = "false";
+                    span.classList.remove('editing');
+                    span.blur(); // 移除焦点
+                });
+
+                const saveBtn = itemDiv.querySelector('.save-btn'); // 找到当前的保存按钮
+                if (saveBtn) {
+                    saveBtn.textContent = "✏️";
+                    saveBtn.title = "编辑"; // 恢复为编辑标题
+                    saveBtn.classList.add('edit-btn');
+                    saveBtn.classList.remove('save-btn');
+                }
+            }
+            currentEditingElement = null; // 清除当前编辑元素
+        }
+
+        function exitEditMode() {
+            console.log('[Webview Debug] exitEditMode called.');
+            // 此函数现在仅用于调试和清理，实际UI逻辑已移至 saveEditing 或点击事件处理器
+            if (!currentEditingElement) {
+                console.log('[Webview Debug] exitEditMode: currentEditingElement is null, returning.');
+                return;
+            }
+            console.log('[Webview Debug] exitEditMode: currentEditingElement before change:', currentEditingElement);
+            
+            // 确保所有可编辑字段都退出编辑模式
+            const item = currentEditingElement.closest('.item');
+            if (item) {
+                const editableSpans = item.querySelectorAll('.item-editable');
+                editableSpans.forEach(span => {
+                    span.contentEditable = "false";
+                    span.classList.remove('editing');
+                    span.blur(); // 移除焦点
+                });
+
+                const saveBtn = item.querySelector('.save-btn');
+                if (saveBtn) {
+                    console.log('[Webview Debug] exitEditMode: Found saveBtn, changing text and class.');
+                    saveBtn.textContent = "✏️";
+                    saveBtn.title = "编辑"; // 恢复为编辑标题
+                    saveBtn.classList.add('edit-btn');
+                    saveBtn.classList.remove('save-btn');
+                } else {
+                    console.log('[Webview Debug] exitEditMode: saveBtn not found for current item.');
+                }
+            } else {
+                console.log('[Webview Debug] exitEditMode: Item element not found for currentEditingElement.');
+            }
+            
+            currentEditingElement = null;
+            console.log('[Webview Debug] exitEditMode: currentEditingElement set to null.');
+        }
+
+        // 保存到文件
+        document.getElementById('save-btn').addEventListener('click', () => {
+            if (currentEditingElement) {
+                saveEditing(currentEditingElement); // 确保在保存前退出当前编辑模式
+            }
+            
+            // 应用修改到词汇表
+            // vocabularyEntries 已经包含了最新的修改，只需深拷贝并发送
+            const entriesToSend = JSON.parse(JSON.stringify(vocabularyEntries));
+            const deletedItemsToSend = JSON.parse(JSON.stringify(deletedItems));
+
+            console.log('--- Debug: About to post saveVocabulary message from webview ---');
+            vscode.postMessage({
+                command: 'saveVocabulary',
+                entries: entriesToSend,
+                deletedItems: deletedItemsToSend
+            });
+        });
+
+        // 导出全部
+        document.getElementById('export-btn').addEventListener('click', () => {
+            if (currentEditingElement) {
+                saveEditing(currentEditingElement);
+            }
+            vscode.postMessage({
+                command: 'exportAll',
+                entries: vocabularyEntries
+            });
+        });
+
+        // 关闭
+        document.getElementById('close-btn').addEventListener('click', () => {
+            if (currentEditingElement) {
+                saveEditing(currentEditingElement);
+            }
+            vscode.postMessage({
+                command: 'close'
+            });
+        });
+
+        // 添加条目功能
+        document.getElementById('add-entry-btn').addEventListener('click', function() {
+            // 检查是否已有新增行，避免重复添加
+            if (document.getElementById('new-entry-row')) return;
+            const vocabularyList = document.getElementById('vocabulary-list');
+            const newDiv = document.createElement('div');
+            newDiv.className = 'item';
+            newDiv.id = 'new-entry-row';
+            newDiv.innerHTML = `
+                <input type="checkbox" class="item-checkbox" disabled>
+                <span class="item-original item-editable editing" contenteditable="true" data-field="original"></span>
+                <span class="item-translated item-editable editing" contenteditable="true" data-field="translated"></span>
+                <span class="item-type item-editable editing" contenteditable="true" data-field="type">identifier</span>
+                <span class="item-source item-editable editing" contenteditable="true" data-field="source">user</span>
+                <div class="item-actions">
+                    <button class="action-btn save-btn" title="保存">💾</button>
+                    <button class="action-btn cancel-btn" title="取消">❌</button>
+                </div>
+            `;
+            // 插入到列表最末尾
+            vocabularyList.appendChild(newDiv);
+            
+            // 保存按钮事件
+            newDiv.querySelector('.save-btn').addEventListener('click', function() {
+                const original = newDiv.querySelector('.item-original').textContent.trim();
+                const translated = newDiv.querySelector('.item-translated').textContent.trim();
+                const type = newDiv.querySelector('.item-type').textContent.trim();
+                const source = newDiv.querySelector('.item-source').textContent.trim();
+                // 校验
+                if (!original) {
+                    showMessage('原文不能为空', 'error');
+                    return;
+                }
+                if (vocabularyEntries.some(e => e.original === original)) {
+                    showMessage('原文已存在，不能重复', 'error');
+                    return;
+                }
+                // 添加到数组末尾
+                const entry = { original, translated, type, source };
+                vocabularyEntries.push(entry);
+                selectedMap[original] = false;
+                applyFilters();
+                renderList();
+                updateStats();
+                updateSelectAllCheckbox();
+                updateBatchButtons();
+            });
+            // 取消按钮事件
+            newDiv.querySelector('.cancel-btn').addEventListener('click', function() {
+                newDiv.remove();
+            });
+            // 自动滚动到新增行并聚焦
+            newDiv.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            newDiv.querySelector('.item-original').focus();
+        });
+    </script>
+</body>
+</html> 

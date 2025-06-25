@@ -1,0 +1,245 @@
+{
+  "name": "code-localizer",
+  "displayName": "Code Localizer",
+  "description": "将代码标识符本地化显示为用户母语的VS Code扩展",
+  "version": "0.1.0",
+  "publisher": "YourPublisherName",
+  "engines": {
+    "vscode": "^1.60.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "keywords": [
+    "language",
+    "localization",
+    "localizer",
+    "translate",
+    "translation",
+    "中文",
+    "母语",
+    "翻译",
+    "本地化"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "codeLocalizer.extractCurrentFile",
+        "title": "提取文件中的词汇"
+      },
+      {
+        "command": "codeLocalizer.testCollector",
+        "title": "测试识别器"
+      },
+      {
+        "command": "codeLocalizer.showTargetLanguage",
+        "title": "显示当前目标语言"
+      },
+      {
+        "command": "codeLocalizer.setTargetLanguage",
+        "title": "设置目标语言"
+      },
+      {
+        "command": "codeLocalizer.clearVocabulary",
+        "title": "清除词汇表"
+      },
+      {
+        "command": "codeLocalizer.configLocalLLM",
+        "title": "配置本地LLM设置"
+      },
+      {
+        "command": "codeLocalizer.translateSelected",
+        "title": "翻译选中的标识符"
+      },
+      {
+        "command": "codeLocalizer.showTranslationPreview",
+        "title": "查看翻译结果"
+      },
+      {
+        "command": "codeLocalizer.showContributionStats",
+        "title": "显示翻译贡献统计"
+      },
+      {
+        "command": "codeLocalizer.showExtractedItems",
+        "title": "查看提取结果"
+      },
+      {
+        "command": "codeLocalizer.clearTempVocabulary",
+        "title": "清除缓存"
+      },
+      {
+        "command": "codeLocalizer.toggleMotherTongueDisplay",
+        "title": "切换代码母语显示"
+      },
+      {
+        "command": "codeLocalizer.refreshMotherTongueDisplay",
+        "title": "刷新代码母语显示"
+      },
+      {
+        "command": "codeLocalizer.clearDecorationCache",
+        "title": "清理装饰缓存"
+      },
+      {
+        "command": "codeLocalizer.manageBlacklist",
+        "title": "管理技术术语黑名单"
+      },
+      {
+        "command": "codeLocalizer.addToBlacklist",
+        "title": "添加当前选中的标识符到黑名单"
+      },
+      {
+        "command": "codeLocalizer.editBlacklistInSettings",
+        "title": "编辑黑名单文件"
+      },
+      {
+        "command": "codeLocalizer.organizeVocabulary",
+        "title": "整理词汇表"
+      }
+    ],
+    "submenus": [
+      {
+        "id": "codeLocalizer.contextMenu",
+        "label": "代码本地化"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "submenu": "codeLocalizer.contextMenu",
+          "group": "1_modification"
+        }
+      ],
+      "explorer/context": [
+        {
+          "submenu": "codeLocalizer.contextMenu",
+          "group": "1_modification",
+          "when": "resourceLangId"
+        }
+      ],
+      "codeLocalizer.contextMenu": [
+        {
+          "command": "codeLocalizer.toggleMotherTongueDisplay",
+          "group": "1_preview"
+        },
+
+        {
+          "command": "codeLocalizer.translateSelected",
+          "group": "2_translation",
+          "when": "editorHasSelection"
+        },
+        {
+          "command": "codeLocalizer.extractCurrentFile",
+          "group": "1_preview"
+        },
+        {
+          "command": "codeLocalizer.showTranslationPreview",
+          "group": "3_preview"
+        },
+        {
+          "command": "codeLocalizer.showExtractedItems",
+          "group": "3_preview"
+        },
+        {
+          "command": "codeLocalizer.clearTempVocabulary",
+          "group": "3_preview"
+        },
+
+        {
+          "command": "codeLocalizer.setTargetLanguage",
+          "group": "4_config"
+        },
+        {
+          "command": "codeLocalizer.editBlacklistInSettings",
+          "group": "4_config"
+        },
+        {
+          "command": "codeLocalizer.showContributionStats",
+          "group": "5_stats"
+        },
+        {
+          "command": "codeLocalizer.organizeVocabulary",
+          "group": "4_config"
+        }
+      ]
+    },
+    "configuration": {
+      "type": "object",
+      "title": "Code Localizer Configuration",
+      "properties": {
+        "codeLocalizer.targetLanguage": {
+          "type": "string",
+          "default": "zh-CN",
+          "description": "目标翻译语言代码 (例如: zh-CN, ja, fr, es)。"
+        },
+        "codeLocalizer.autoContributeTranslations": {
+          "type": "boolean",
+          "default": false,
+          "description": "是否自动将用户的翻译贡献到远程服务器（如果实现）。"
+        },
+        "codeLocalizer.translationService.provider": {
+          "type": "string",
+          "enum": ["ollamaApi"],
+          "default": "ollamaApi",
+          "description": "翻译服务提供商: 'ollamaApi' (使用Ollama API，推荐)。"
+        },
+        "codeLocalizer.translationService.ollamaApiUrl": {
+          "type": "string",
+          "default": "http://localhost:11434",
+          "description": "Ollama API的基础URL (默认: http://localhost:11434)。"
+        },
+        "codeLocalizer.translationService.ollamaModelName": {
+          "type": "string",
+          "default": "",
+          "description": "要使用的Ollama模型名称 (例如: gemma:2b)。留空将根据目标语言自动选择合适的模型。"
+        },
+        "codeLocalizer.enableMotherTongueDisplay": {
+          "type": "boolean",
+          "default": true,
+          "description": "是否启用代码母语显示。启用后，代码标识符将以目标语言显示。"
+        },
+        "codeLocalizer.motherTongueDisplayStyle": {
+          "type": "string",
+          "enum": ["overlay", "hover", "inlineHint"],
+          "default": "overlay",
+          "description": "母语显示样式: 'overlay' (覆盖原始标识符), 'hover' (仅在悬停时显示), 'inlineHint' (作为内联提示显示)。"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile && npm run copy-assets",
+    "compile": "tsc -p ./ && npm run copy-assets",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts",
+    "test": "vscode-test",
+    "copy-assets": "cpx \"./src/vocabulary/core/**/*.json\" ./out/vocabulary/core"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.60.0",
+    "@typescript-eslint/eslint-plugin": "^4.16.0",
+    "@typescript-eslint/parser": "^4.16.0",
+    "eslint": "^7.21.0",
+    "typescript": "^4.3.5",
+    "@types/glob": "^7.1.3",
+    "cpx": "^1.5.0"
+  },
+  "files": [
+    "out/**/*",
+    "loc_core_vocabulary_zh-CN.json",
+    "loc_core_vocabulary_zh-TW.json",
+    "loc_core_vocabulary_ja.json",
+    "loc_core_vocabulary_ko.json",
+    "loc_core_vocabulary_ru.json",
+    "loc_core_vocabulary_fr.json",
+    "loc_core_vocabulary_de.json",
+    "loc_core_vocabulary_es.json",
+    "loc_core_vocabulary_pt-BR.json",
+    "loc_core_vocabulary_it.json",
+    "loc_core_vocabulary_tr.json"
+  ]
+} 

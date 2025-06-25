@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';">
+    <title>翻译结果</title>
+    <style>
+        :root {
+            --vscode-background: var(--vscode-editor-background, #1e1e1e);
+            --vscode-foreground: var(--vscode-editor-foreground, #d4d4d4);
+            --vscode-button-background: var(--vscode-button-background, #0e639c);
+            --vscode-button-foreground: var(--vscode-button-foreground, white);
+            --vscode-button-hover-background: var(--vscode-button-hoverBackground, #1177bb);
+            --vscode-list-hoverBackground: var(--vscode-list-hoverBackground, #2a2d2e);
+            --vscode-input-background: var(--vscode-input-background, #3c3c3c);
+            --vscode-input-foreground: var(--vscode-input-foreground, #cccccc);
+            --vscode-input-border: var(--vscode-input-border, #3c3c3c);
+            --vscode-border: var(--vscode-panel-border, #80808059);
+            --vscode-accent: var(--vscode-focusBorder, #007fd4);
+            --vscode-icon-color: var(--vscode-icon-foreground, #c5c5c5);
+            --vscode-checkbox-background: var(--vscode-checkbox-background, #3c3c3c);
+            --vscode-checkbox-foreground: var(--vscode-checkbox-foreground, #cccccc);
+            --vscode-checkbox-border: var(--vscode-checkbox-border, #3c3c3c);
+            --custom-background: #3a3a3a;
+            --custom-list-background: #424242;
+            --custom-item-background: #4a4a4a;
+            --custom-hover-background: #555555;
+            --custom-border-color: #666666;
+        }
+        body {
+            font-family: var(--vscode-font-family, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif);
+            padding: 20px;
+            background-color: var(--custom-background);
+            color: #f0f0f0;
+            line-height: 1.5;
+            user-select: none;
+        }
+        h1 {
+            color: #ffffff;
+            font-size: 1.6em;
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--custom-border-color);
+        }
+        .item-list {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid var(--custom-border-color);
+            padding: 10px;
+            background-color: var(--custom-list-background);
+            border-radius: 4px;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+        }
+        .item {
+            padding: 8px 10px;
+            border-bottom: 1px solid var(--custom-border-color);
+            font-family: var(--vscode-editor-font-family, 'Consolas', 'Courier New', monospace);
+            display: flex;
+            align-items: center;
+            position: relative;
+            background-color: var(--custom-item-background);
+            margin-bottom: 4px;
+            border-radius: 3px;
+        }
+        .item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        .item:hover {
+            background-color: var(--custom-hover-background);
+        }
+        .item-text {
+            flex-grow: 1;
+            cursor: text;
+            padding: 2px 5px;
+            border-radius: 3px;
+            user-select: text;
+            color: #ffffff;
+        }
+        .item-text.editing {
+            background-color: #333333;
+            color: #ffffff;
+            border: 1px solid var(--vscode-accent);
+            outline: none;
+            padding: 2px 5px;
+        }
+        .item-actions {
+            display: flex;
+            gap: 8px;
+            opacity: 0.5;
+            transition: opacity 0.2s;
+        }
+        .item:hover .item-actions {
+            opacity: 1;
+        }
+        .action-btn {
+            background: none;
+            border: none;
+            color: var(--vscode-icon-color);
+            cursor: pointer;
+            font-size: 14px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            outline: none;
+        }
+        .action-btn:hover {
+            background-color: var(--vscode-button-background);
+            color: var(--vscode-button-foreground);
+        }
+        .delete-btn:hover {
+            background-color: #d32f2f;
+        }
+        .count {
+            font-weight: bold;
+            color: white;
+            background-color: #0078d4;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.9em;
+            margin-left: 8px;
+        }
+        .button-container {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        button {
+            padding: 8px 20px;
+            background-color: #0078d4;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background-color: #106ebe;
+        }
+        .secondary {
+            background-color: #5a5a5a;
+            color: white;
+            border: 1px solid #666666;
+        }
+        .info-message {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            margin-top: 10px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        .info-message.error {
+            background-color: #f44336;
+        }
+        .empty-state {
+            text-align: center;
+            color: #888;
+            padding: 20px;
+            font-style: italic;
+        }
+        .header-actions {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .select-all-container {
+            display: flex;
+            align-items: center;
+        }
+        .select-all-checkbox {
+            margin-right: 5px;
+        }
+        .item-original-word {
+            flex-shrink: 0; /* 防止文本溢出时收缩 */
+            font-weight: bold;
+            color: #ffffff; /* 将颜色改为白色 */
+        }
+        .item-checkbox {
+            margin-right: 8px;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border: 1px solid var(--vscode-checkbox-border);
+            background-color: var(--vscode-checkbox-background);
+            border-radius: 3px;
+            position: relative;
+        }
+        /* 新增：选中状态的背景色和边框色 */
+        .item-checkbox:checked {
+            background-color: var(--vscode-button-background);
+            border-color: var(--vscode-button-background);
+        }
+        /* 新增：选中状态的对号样式 */
+        .item-checkbox:checked::after {
+            content: '✓';
+            position: absolute;
+            color: var(--vscode-button-foreground);
+            font-size: 12px;
+            top: -1px;
+            left: 2px;
+        }
+    </style>
+</head>
+<body>
+    <h1>翻译结果</h1>
+    <h2 id="identifierTitle" style="color:#78b0fa;font-size:1.1em;margin:10px 0 10px 0;">
+        翻译的标识符 (<span id="identifierCount">0</span>)
+    </h2>
+    <div class="info-message" id="infoMessage" style="display: none;"></div>
+    <div class="header-actions">
+        <label class="select-all-container">
+            <input type="checkbox" id="select-all-checkbox" class="select-all-checkbox">
+            <span>全选</span>
+        </label>
+    </div>
+    <div class="item-list" id="identifiers-list">
+        <!-- 翻译结果将由JS动态渲染 -->
+    </div>
+    <div class="button-container">
+        <button id="merge-btn">合并到词汇表</button>
+        <button id="batchDeleteButton" class="action-button" disabled>批量删除选中项</button>
+        <button id="close-btn" class="secondary">关闭</button>
+    </div>
+    <script>
+        const vscode = acquireVsCodeApi();
+        let translationResults = [];
+        let modifiedTranslations = {};
+        let deletedItems = [];
+        let currentEditingElement = null;
+        let selectedMap = Object.create(null); // 修复：使用 Object.create(null) 防止原型链污染
+
+        // 监听来自扩展的消息
+        window.addEventListener('message', event => {
+            const message = event.data;
+            switch (message.command) {
+                case 'setTranslationResults':
+                    translationResults = message.translationResults || [];
+                    // 初始化勾选状态为全部不选
+                    selectedMap = Object.create(null); // 修复：使用 Object.create(null) 防止原型链污染
+                    renderList();
+                    updateSelectAllCheckbox();
+                    updateBatchDeleteButton();
+                    break;
+            }
+        });
+
+        function renderList() {
+            const identifiersList = document.getElementById('identifiers-list');
+            const countSpan = document.getElementById('identifierCount');
+            if (countSpan) countSpan.textContent = translationResults.length;
+            if (!identifiersList) return;
+            identifiersList.innerHTML = '';
+            if (translationResults.length === 0) {
+                const emptyState = document.createElement('div');
+                emptyState.className = 'empty-state';
+                emptyState.textContent = '未找到翻译结果';
+                identifiersList.appendChild(emptyState);
+            } else {
+                translationResults.forEach((item, index) => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'item';
+                    itemDiv.setAttribute('data-value', item.original);
+                    itemDiv.setAttribute('data-type', 'identifier');
+
+                    // 使用 innerHTML 构造内容，更简洁
+                    itemDiv.innerHTML = `
+                        <input type="checkbox" class="item-checkbox" ${selectedMap[item.original] ? 'checked' : ''}>
+                        <span class="item-original-word">${item.original}</span>
+                        <span style="margin: 0 8px; color: var(--vscode-foreground);">-></span>
+                        <span class="item-text" contenteditable="false" data-initial-translated="${item.translated}">${item.translated}</span>
+                        <div class="item-actions">
+                            <button class="action-btn edit-btn" title="编辑译文">✏️</button>
+                            <button class="action-btn delete-btn" title="删除">🗑️</button>
+                        </div>
+                    `;
+
+                    // 为新创建的元素添加事件监听器 (这些代码将被移除，转为全局事件委托)
+                    // const checkbox = itemDiv.querySelector('.item-checkbox');
+                    // checkbox.addEventListener('change', function() {
+                    //     selectedMap[item.original] = this.checked;
+                    //     updateSelectAllCheckbox();
+                    //     updateBatchDeleteButton();
+                    // });
+
+                    const translatedTextSpan = itemDiv.querySelector('.item-text');
+                    const editBtn = itemDiv.querySelector('.edit-btn, .save-btn');
+                    editBtn.addEventListener('click', function() {
+                        if (this.classList.contains('save-btn')) {
+                            saveEditing(translatedTextSpan);
+                        } else {
+                            enterEditMode(translatedTextSpan, this);
+                        }
+                    });
+
+                    const delBtn = itemDiv.querySelector('.delete-btn');
+                    delBtn.addEventListener('click', function() {
+                        handleDeleteItem(item.original);
+                    });
+
+                    identifiersList.appendChild(itemDiv);
+                });
+            }
+        }
+
+        // 全局事件委托，处理单个复选框的变化
+        document.addEventListener('change', function(event) {
+            if (event.target.classList.contains('item-checkbox')) {
+                const originalValue = event.target.closest('.item').getAttribute('data-value');
+                selectedMap[originalValue] = event.target.checked;
+                updateSelectAllCheckbox();
+                updateBatchDeleteButton();
+            }
+        });
+
+        // 全选/全不选
+        document.getElementById('select-all-checkbox').addEventListener('change', function() {
+            const checked = this.checked;
+            translationResults.forEach(item => {
+                selectedMap[item.original] = checked;
+            });
+            renderList();
+            updateBatchDeleteButton();
+        });
+
+        function updateSelectAllCheckbox() {
+            const selectAll = document.getElementById('select-all-checkbox');
+            const total = translationResults.length;
+            const selected = Object.values(selectedMap).filter(Boolean).length;
+            selectAll.checked = selected === total && total > 0;
+            selectAll.indeterminate = selected > 0 && selected < total;
+        }
+
+        // 批量删除按钮
+        const batchDeleteButton = document.getElementById('batchDeleteButton');
+        function updateBatchDeleteButton() {
+            const selectedCount = Object.values(selectedMap).filter(Boolean).length;
+            batchDeleteButton.disabled = selectedCount === 0;
+        }
+        batchDeleteButton.addEventListener('click', function() {
+            // 删除所有勾选项
+            const toDelete = translationResults.filter(item => selectedMap[item.original]);
+            toDelete.forEach(item => handleDeleteItem(item.original));
+        });
+
+        function handleDeleteItem(original) {
+            // 从 translationResults 中移除
+            translationResults = translationResults.filter(item => item.original !== original);
+            deletedItems.push(original);
+            delete selectedMap[original];
+            renderList();
+            updateSelectAllCheckbox();
+            updateBatchDeleteButton();
+        }
+
+        function enterEditMode(element, editBtn) {
+            if (currentEditingElement) {
+                saveEditing(currentEditingElement); // 保存上一个编辑中的元素
+            }
+            currentEditingElement = element;
+            currentEditingElement.contentEditable = 'true';
+            currentEditingElement.classList.add('editing');
+            currentEditingElement.focus();
+            editBtn.textContent = '💾';
+            editBtn.title = '保存';
+            editBtn.classList.remove('edit-btn');
+            editBtn.classList.add('save-btn');
+        }
+
+        function saveEditing(element) {
+            if (!element) return;
+            const newValue = element.textContent.trim();
+            const itemDiv = element.closest('.item'); // 获取父级itemDiv
+            const originalValue = itemDiv.getAttribute('data-value'); // 从itemDiv获取原始单词
+            
+            // 检查翻译是否确实发生了变化（与data-initial-translated属性存储的初始翻译值比较）
+            if (newValue !== element.getAttribute('data-initial-translated')) {
+                modifiedTranslations[originalValue] = newValue;
+                // 同步更新 translationResults 数组中对应项的 translated 字段
+                const idx = translationResults.findIndex(item => item.original === originalValue);
+                if (idx !== -1) {
+                    translationResults[idx].translated = newValue;
+                }
+            }
+            // 更新data-initial-translated属性为新值，以便下次编辑时使用
+            element.setAttribute('data-initial-translated', newValue);
+            exitEditMode();
+        }
+
+        function exitEditMode() {
+            if (!currentEditingElement) return;
+            currentEditingElement.contentEditable = "false";
+            currentEditingElement.classList.remove('editing');
+            const item = currentEditingElement.closest('.item');
+            const saveBtn = item.querySelector('.save-btn');
+            if (saveBtn) {
+                saveBtn.textContent = "✏️";
+                saveBtn.title = "编辑译文";
+                saveBtn.classList.add('edit-btn');
+                saveBtn.classList.remove('save-btn');
+            }
+            currentEditingElement = null;
+        }
+
+        document.getElementById('merge-btn').addEventListener('click', () => {
+            if (currentEditingElement) {
+                saveEditing(currentEditingElement);
+            }
+            // 构造全部翻译结果的对象，保证所有内容都能合并
+            const allTranslations = {};
+            translationResults.forEach(item => {
+                allTranslations[item.original] = item.translated;
+            });
+            vscode.postMessage({
+                command: 'merge',
+                modifiedTranslations: allTranslations, // 发送全部剩余翻译
+                deletedItems
+            });
+        });
+        document.getElementById('close-btn').addEventListener('click', () => {
+            if (currentEditingElement) {
+                saveEditing(currentEditingElement);
+            }
+            vscode.postMessage({
+                command: 'close'
+            });
+        });
+    </script>
+</body>
+</html> 

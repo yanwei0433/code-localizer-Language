@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';">
+    <title>已提取的标识符</title>
+    <style>
+        :root {
+            --vscode-background: var(--vscode-editor-background, #1e1e1e);
+            --vscode-foreground: var(--vscode-editor-foreground, #d4d4d4);
+            --vscode-button-background: var(--vscode-button-background, #0e639c);
+            --vscode-button-foreground: var(--vscode-button-foreground, white);
+            --vscode-button-hover-background: var(--vscode-button-hoverBackground, #1177bb);
+            --vscode-list-hoverBackground: var(--vscode-list-hoverBackground, #2a2d2e);
+            --vscode-input-background: var(--vscode-input-background, #3c3c3c);
+            --vscode-input-foreground: var(--vscode-input-foreground, #cccccc);
+            --vscode-input-border: var(--vscode-input-border, #3c3c3c);
+            --vscode-border: var(--vscode-panel-border, #80808059);
+            --vscode-accent: var(--vscode-focusBorder, #007fd4);
+            --vscode-icon-color: var(--vscode-icon-foreground, #c5c5c5);
+            --vscode-checkbox-background: var(--vscode-checkbox-background, #3c3c3c);
+            --vscode-checkbox-foreground: var(--vscode-checkbox-foreground, #cccccc);
+            --vscode-checkbox-border: var(--vscode-checkbox-border, #3c3c3c);
+            
+            /* 调整背景颜色，使用灰色系替代黑色系 */
+            --custom-background: #3a3a3a;
+            --custom-list-background: #424242;
+            --custom-item-background: #4a4a4a;
+            --custom-hover-background: #555555;
+            --custom-border-color: #666666;
+        }
+        
+        body { 
+            font-family: var(--vscode-font-family, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif); 
+            padding: 20px; 
+            background-color: var(--custom-background);
+            color: #f0f0f0;
+            line-height: 1.5;
+            user-select: none; /* 防止无意中选中文本 */
+        }
+        
+        h1 { 
+            color: #ffffff; 
+            font-size: 1.6em; 
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--custom-border-color);
+        }
+        
+        h2 { 
+            color: #78b0fa; 
+            font-size: 1.3em; 
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+        }
+        
+        h2::before {
+            content: '';
+            display: inline-block;
+            width: 8px;
+            height: 18px;
+            background-color: #78b0fa;
+            margin-right: 8px;
+            border-radius: 2px;
+        }
+        
+        .item-list { 
+            max-height: 300px; 
+            overflow-y: auto; 
+            border: 1px solid var(--custom-border-color); 
+            padding: 10px; 
+            background-color: var(--custom-list-background);
+            border-radius: 4px;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        .item { 
+            padding: 8px 10px; 
+            border-bottom: 1px solid var(--custom-border-color);
+            font-family: var(--vscode-editor-font-family, 'Consolas', 'Courier New', monospace);
+            display: flex;
+            align-items: center;
+            position: relative;
+            background-color: var(--custom-item-background);
+            margin-bottom: 4px;
+            border-radius: 3px;
+        }
+        
+        .item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        
+        .item:hover {
+            background-color: var(--custom-hover-background);
+        }
+        
+        .item-checkbox {
+            margin-right: 10px;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border: 1px solid var(--vscode-checkbox-border);
+            background-color: var(--vscode-checkbox-background);
+            border-radius: 3px;
+            position: relative;
+        }
+        
+        .item-checkbox:checked {
+            background-color: var(--vscode-button-background);
+            border-color: var(--vscode-button-background);
+        }
+        
+        .item-checkbox:checked::after {
+            content: '✓';
+            position: absolute;
+            color: var(--vscode-button-foreground);
+            font-size: 12px;
+            top: -1px;
+            left: 2px;
+        }
+        
+        .item-text {
+            flex-grow: 1;
+            cursor: text;
+            padding: 2px 5px;
+            border-radius: 3px;
+            user-select: text; /* 允许文本选择 */
+            color: #ffffff; /* 提高文字对比度 */
+        }
+        
+        .item-text.editing {
+            background-color: #333333;
+            color: #ffffff;
+            border: 1px solid var(--vscode-accent);
+            outline: none;
+            padding: 2px 5px;
+        }
+        
+        .item-actions {
+            display: flex;
+            gap: 8px;
+            opacity: 0.5;
+            transition: opacity 0.2s;
+        }
+        
+        .item:hover .item-actions {
+            opacity: 1;
+        }
+        
+        .action-btn {
+            background: none;
+            border: none;
+            color: var(--vscode-icon-color);
+            cursor: pointer;
+            font-size: 14px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            outline: none;
+        }
+        
+        .action-btn:hover {
+            background-color: var(--vscode-button-background);
+            color: var(--vscode-button-foreground);
+        }
+        
+        .delete-btn:hover {
+            background-color: #d32f2f;
+        }
+        
+        .count { 
+            font-weight: bold; 
+            color: white;
+            background-color: #0078d4;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.9em;
+            margin-left: 8px;
+        }
+        
+        .button-container { 
+            margin-top: 20px; 
+            display: flex; 
+            gap: 10px; 
+            justify-content: center; 
+        }
+        
+        button { 
+            padding: 8px 20px; 
+            background-color: #0078d4; 
+            color: white; 
+            border: none; 
+            cursor: pointer; 
+            border-radius: 4px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        button:hover { 
+            background-color: #106ebe; 
+        }
+        
+        .secondary { 
+            background-color: #5a5a5a; 
+            color: white;
+            border: 1px solid #666666;
+        }
+        
+        .info-message {
+            background-color: #4CAF50; /* 绿色背景 */
+            color: white;
+            padding: 10px;
+            text-align: center;
+            margin-top: 10px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        
+        .info-message.error {
+            background-color: #f44336; /* 红色背景 */
+        }
+        
+        .empty-state {
+            text-align: center;
+            color: #888;
+            padding: 20px;
+            font-style: italic;
+        }
+        
+        .header-actions {
+            margin-bottom: 10px;
+        }
+        
+        .select-all-container {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+        }
+        
+        .select-all-checkbox {
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>已提取的内容</h1>
+    
+    <div class="info-message" id="infoMessage" style="display: none;"></div>
+
+    <h2 id="identifierTitle">提取的标识符 (<span id="identifierCount">0</span>)</h2>
+    <div class="header-actions">
+        <label class="select-all-container">
+            <input type="checkbox" id="select-all-checkbox" class="select-all-checkbox">
+            <span>全选</span>
+        </label>
+    </div>
+    
+    <div class="item-list" id="identifiers-list">
+        <!-- Identifiers will be dynamically inserted here by JavaScript -->
+    </div>
+
+    <div class="button-container">
+        <button id="translate-btn">本地llm翻译</button>
+        <button id="copyToAIButton" class="action-button">复制到AI助手翻译</button>
+        <button id="batchDeleteButton" class="action-button" disabled>批量删除选中项</button>
+        <button id="import-ai-btn" class="secondary">AI助手翻译提交</button>
+        <button id="close-btn" class="secondary">关闭</button>
+    </div>
+    
+    <!-- 弹出内容添加框 -->
+    <div id="ai-import-modal" style="display:none;position:fixed;left:0;top:0;width:100vw;height:100vh;background:rgba(0,0,0,0.4);z-index:1000;align-items:center;justify-content:center;">
+      <div style="background:#222;padding:24px 20px 16px 20px;border-radius:8px;min-width:320px;max-width:90vw;box-shadow:0 4px 16px #000;position:relative;">
+        <h3 style="color:#fff;margin-bottom:10px;">粘贴AI翻译JSON数组</h3>
+        <div style="color:#aaa;font-size:13px;margin-bottom:6px;line-height:1.6;">
+          <b>请复制如下格式的内容（严格JSON数组，无需代码块标记）：</b><br/>
+          [<br/>
+          &nbsp;&nbsp;{"original": "StdId", "translated": "标准ID", "type": "identifier", "source": "ai"},<br/>
+          &nbsp;&nbsp;{"original": "RTR", "translated": "远程传输请求", "type": "identifier", "source": "ai"}<br/>
+          ]<br/>
+          <span style="color:#f45236;">不要加任何说明、不要加markdown代码块标记，只能是纯JSON数组！</span>
+        </div>
+        <textarea id="ai-import-textarea" style="width:100%;height:120px;resize:vertical;background:#333;color:#fff;border:1px solid #555;border-radius:4px;padding:8px;"></textarea>
+        <div style="margin-top:12px;text-align:right;">
+          <button id="ai-import-paste" style="margin-right:10px;background-color:#4CAF50;">粘贴</button>
+          <button id="ai-import-confirm" style="margin-right:10px;">提交</button>
+          <button id="ai-import-cancel">取消</button>
+        </div>
+        <div id="ai-import-error" style="color:#f44336;margin-top:8px;display:none;"></div>
+      </div>
+    </div>
+    
+    <script>
+        const vscode = acquireVsCodeApi();
+
+        // 获取初始状态（如果有）
+        const initialState = vscode.getState();
+        let modifiedIdentifiers = initialState ? initialState.modifiedIdentifiers : {};
+        let deletedItems = initialState ? initialState.deletedItems : { identifiers: [] };
+
+        // 初始标识符数据，将通过 postMessage 从扩展接收
+        let identifiers = [];
+        let selectedMap = Object.create(null); // 修复：使用 Object.create(null) 防止原型链污染
+
+        // 全局计数器，用于生成唯一ID
+        let uniqueIdCounter = 0;
+        let currentEditingElement = null; // 用于跟踪当前正在编辑的元素
+
+        // 监听来自扩展的消息
+        window.addEventListener('message', event => {
+            const message = event.data;
+            console.log('[Webview DEBUG] 收到消息:', message.command); // DEBUG: 记录收到的命令
+            switch (message.command) {
+                case 'setIdentifiers':
+                    console.log('[Webview DEBUG] 接收到标识符:', message.identifiers ? message.identifiers.length : 0); // DEBUG: 记录接收到的标识符数量
+                    identifiers = message.identifiers || [];
+                    // 在接收到新标识符时，重置 selectedMap
+                    selectedMap = Object.create(null); // 修复：使用 Object.create(null) 防止原型链污染
+                    console.log('[Webview DEBUG] Webview内部标识符数量:', identifiers.length); // DEBUG: 记录Webview内部标识符数量
+                    renderList();
+                    break;
+            }
+        });
+
+        // 渲染列表函数
+        function renderList() {
+            console.log('[Webview DEBUG] renderList 开始，标识符数量:', identifiers.length); // DEBUG: 渲染前标识符数量
+            const identifiersList = document.getElementById('identifiers-list');
+            if (!identifiersList) {
+                console.error('[Webview DEBUG] 找不到 identifiers-list 元素'); // DEBUG: 找不到元素
+                return;
+            }
+            identifiersList.innerHTML = ''; // Clear existing list
+
+            if (identifiers.length === 0) {
+                console.log('[Webview DEBUG] 标识符列表为空，显示空状态'); // DEBUG: 空状态
+                const emptyState = document.createElement('div');
+                emptyState.className = 'empty-state';
+                emptyState.textContent = '未找到标识符';
+                identifiersList.appendChild(emptyState);
+            } else {
+                identifiers.forEach((id, index) => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'item';
+                    itemDiv.setAttribute('data-value', id);
+                    itemDiv.setAttribute('data-type', 'identifier');
+
+                    const checkboxId = `item-${index}`;
+                    // 根据 selectedMap 设置 checked 属性
+                    itemDiv.innerHTML = `
+                        <input type="checkbox" class="item-checkbox" id="${checkboxId}" data-id="${index}" ${selectedMap[id] ? 'checked' : ''}>
+                        <span class="item-text" contenteditable="false" data-original="${escapeHtml(id)}">${escapeHtml(id)}</span>
+                        <div class="item-actions">
+                            <button class="action-btn edit-btn" title="编辑">✏️</button>
+                            <button class="action-btn delete-btn" title="删除">🗑️</button>
+                        </div>
+                    `;
+                    identifiersList.appendChild(itemDiv);
+                });
+            }
+            updateCounter('identifier');
+            updateBatchDeleteButton();
+            updateSelectAllCheckbox();
+        }
+
+        // HTML 转义函数
+        // 此函数已被移动到 src/extraction/word-utils.ts，因此在此处删除重复定义。
+
+        // 更新计数器
+        function updateCounter(type) {
+            const counter = document.getElementById(type === 'identifier' ? 'identifierCount' : 'commentCount');
+            if (counter) {
+                counter.textContent = identifiers.length;
+            }
+            const listElement = document.getElementById(type === 'identifier' ? 'identifiers-list' : 'comments-list');
+            if (listElement && identifiers.length === 0) {
+                const emptyState = document.createElement('div');
+                emptyState.className = 'empty-state';
+                emptyState.textContent = type === 'identifier' ? '未找到标识符' : '未找到注释';
+                listElement.innerHTML = ''; // Clear existing items
+                listElement.appendChild(emptyState);
+            }
+        }
+
+        // 更新批量删除按钮状态
+        function updateBatchDeleteButton() {
+            const batchDeleteBtn = document.getElementById('batchDeleteButton');
+            
+            if (batchDeleteBtn) {
+                // 检查 selectedMap 中有多少项被选中
+                const selectedCount = Object.values(selectedMap).filter(Boolean).length;
+                batchDeleteBtn.disabled = selectedCount === 0;
+            }
+        }
+        
+        // 更新"全选"复选框状态
+        function updateSelectAllCheckbox() {
+            const selectAllCheckbox = document.getElementById('select-all-checkbox');
+            // 获取总的标识符数量和选中的数量
+            const totalIdentifiers = identifiers.length;
+            const checkedIdentifiers = Object.values(selectedMap).filter(Boolean).length;
+            
+            if (selectAllCheckbox) {
+                if (totalIdentifiers === checkedIdentifiers && totalIdentifiers > 0) {
+                    selectAllCheckbox.checked = true;
+                    selectAllCheckbox.indeterminate = false;
+                } else if (checkedIdentifiers === 0) {
+                    selectAllCheckbox.checked = false;
+                    selectAllCheckbox.indeterminate = false;
+                } else {
+                    selectAllCheckbox.indeterminate = true;
+                }
+            }
+        }
+
+        // 全选/取消全选
+        document.getElementById('select-all-checkbox')?.addEventListener('change', function() {
+            const isChecked = this.checked;
+            // 更新 selectedMap 中的所有状态
+            identifiers.forEach(id => {
+                selectedMap[id] = isChecked;
+            });
+            renderList(); // 重新渲染列表以更新复选框状态
+            updateBatchDeleteButton();
+            updateSelectAllCheckbox();
+        });
+
+        // 监听单个复选框的变化
+        document.addEventListener('change', function(event) {
+            if (event.target.classList.contains('item-checkbox')) {
+                const originalValue = event.target.closest('.item').getAttribute('data-value');
+                selectedMap[originalValue] = event.target.checked; // 更新 selectedMap
+                updateBatchDeleteButton();
+                updateSelectAllCheckbox();
+            }
+        });
+
+        // 处理编辑/保存/删除按钮点击
+        document.addEventListener('click', function(event) {
+            if (event.target.classList.contains('edit-btn')) {
+                const itemText = event.target.closest('.item').querySelector('.item-text');
+                if (itemText) {
+                    enterEditMode(itemText, event.target);
+                }
+            } else if (event.target.classList.contains('save-btn')) {
+                const itemText = event.target.closest('.item').querySelector('.item-text');
+                if (itemText) {
+                    saveEditing(itemText);
+                }
+                // 恢复按钮状态
+                event.target.textContent = "✏️";
+                event.target.title = "编辑";
+                event.target.classList.add('edit-btn');
+                event.target.classList.remove('save-btn');
+            } else if (event.target.classList.contains('delete-btn')) {
+                const item = event.target.closest('.item');
+                const value = item.getAttribute('data-value');
+                const type = item.getAttribute('data-type');
+                
+                if (value && type) {
+                    // 从 identifiers 数组中删除
+                    if (type === 'identifier') {
+                        identifiers = identifiers.filter(id => id !== value);
+                        // 同时从临时词汇表删除
+                        const tempIndex = deletedItems.identifiers.indexOf(value);
+                        if (tempIndex === -1) { // 避免重复添加
+                            deletedItems.identifiers.push(value);
+                        }
+                    }
+                    item.remove();
+                    updateCounter(type);
+                    updateBatchDeleteButton();
+                    updateSelectAllCheckbox();
+                    vscode.postMessage({ command: 'deleteItem', type: type, value: value });
+                }
+            }
+        });
+
+        // 进入编辑模式
+        function enterEditMode(element, editBtn) {
+            if (currentEditingElement) {
+                // 如果有其他元素正在编辑，先保存并退出
+                saveEditing(currentEditingElement);
+            }
+            currentEditingElement = element;
+            currentEditingElement.contentEditable = 'true';
+            currentEditingElement.classList.add('editing');
+            currentEditingElement.focus();
+            editBtn.textContent = '💾';
+            editBtn.title = '保存';
+            editBtn.classList.remove('edit-btn');
+            editBtn.classList.add('save-btn');
+        }
+
+        // 处理批量删除按钮点击
+        document.getElementById('batchDeleteButton')?.addEventListener('click', function() {
+            const checkedItems = document.querySelectorAll('.item-checkbox:checked');
+            const itemsToDelete = [];
+            
+            // 收集要删除的项
+            checkedItems.forEach(checkbox => {
+                const item = checkbox.closest('.item');
+                const type = item.getAttribute('data-type');
+                const value = item.getAttribute('data-value');
+                
+                itemsToDelete.push({
+                    type: type,
+                    value: value
+                });
+                
+                // 添加到已删除项目列表
+                if (type === 'identifier') {
+                    // 确保从 identifiers 数组中移除
+                    identifiers = identifiers.filter(id => id !== value);
+                    // 确保添加到 deletedItems 列表
+                    if (deletedItems.identifiers.indexOf(value) === -1) {
+                        deletedItems.identifiers.push(value);
+                    }
+                }
+            });
+            
+            // 从UI中移除所有选中项
+            checkedItems.forEach(checkbox => {
+                const item = checkbox.closest('.item');
+                item.remove();
+            });
+            
+            // 更新计数器
+            updateCounter('identifier');
+            
+            // 通知VS Code批量删除了项目
+            vscode.postMessage({
+                command: 'batchDeleteItems',
+                items: itemsToDelete
+            });
+            
+            // 更新批量删除按钮状态
+            updateBatchDeleteButton();
+            
+            // 更新全选复选框状态
+            updateSelectAllCheckbox();
+        });
+        
+        // 按下ESC键取消编辑, Enter键保存编辑
+        document.addEventListener('keydown', function(event) {
+            if (!currentEditingElement) return;
+            
+            if (event.key === 'Escape') {
+                // 取消编辑，恢复原始值
+                const originalValue = currentEditingElement.getAttribute('data-original');
+                currentEditingElement.textContent = originalValue;
+                
+                exitEditMode();
+                event.preventDefault();
+            } else if (event.key === 'Enter' && !event.shiftKey) {
+                // 保存编辑
+                saveEditing(currentEditingElement);
+                event.preventDefault();
+            }
+        });
+        
+        // 保存编辑
+        function saveEditing(element) {
+            if (!element) return;
+            
+            const newValue = element.textContent.trim();
+            const originalValue = element.getAttribute('data-original');
+            const item = element.closest('.item');
+            const type = item.getAttribute('data-type');
+            
+            // 只有在值变化时才记录修改
+            if (newValue !== originalValue) {
+                if (type === 'identifier') {
+                    // 更新 identifiers 数组
+                    const index = identifiers.indexOf(originalValue);
+                    if (index !== -1) {
+                        identifiers[index] = newValue;
+                    }
+                    modifiedIdentifiers[originalValue] = newValue;
+                }
+                
+                // 更新数据属性
+                item.setAttribute('data-value', newValue);
+                
+                // 通知VS Code值已修改
+                vscode.postMessage({
+                    command: 'modifyItem',
+                    type: type,
+                    original: originalValue,
+                    new: newValue
+                });
+            }
+            
+            exitEditMode();
+        }
+        
+        // 退出编辑模式
+        function exitEditMode() {
+            if (!currentEditingElement) return;
+            
+            currentEditingElement.contentEditable = "false";
+            currentEditingElement.classList.remove('editing');
+            
+            const item = currentEditingElement.closest('.item');
+            const saveBtn = item.querySelector('.save-btn');
+            if (saveBtn) {
+                saveBtn.textContent = "✏️";
+                saveBtn.title = "编辑";
+                saveBtn.classList.add('edit-btn');
+                saveBtn.classList.remove('save-btn');
+            }
+            
+            currentEditingElement = null;
+        }
+        
+        // 翻译按钮
+        document.getElementById('translate-btn')?.addEventListener('click', () => {
+            // 在转到翻译前，确保所有编辑都保存了
+            if (currentEditingElement) {
+                saveEditing(currentEditingElement);
+            }
+            // 自动选择所有标识符
+            const allIds = identifiers.slice();
+            vscode.postMessage({ 
+                command: 'translate',
+                modifiedIdentifiers,
+                deletedItems,
+                selectedIdentifiers: allIds // 新增：传递所有标识符
+            });
+        });
+        
+        // 关闭按钮
+        document.getElementById('close-btn')?.addEventListener('click', () => {
+            // 在关闭前，确保所有编辑都保存了
+            if (currentEditingElement) {
+                saveEditing(currentEditingElement);
+            }
+            
+            vscode.postMessage({ 
+                command: 'close',
+                modifiedIdentifiers,
+                deletedItems
+            });
+        });
+
+        // 复制到AI助手并翻译按钮的事件监听器
+        let targetLanguage = 'zh-CN';
+        let targetLanguageName = '中文';
+
+        // 辅助函数：将本地化语言名称转换为英文名称
+        function getEnglishLanguageName(lang) {
+            const map = {
+                "中文": "Chinese",
+                "简体中文": "Simplified Chinese",
+                "繁体中文": "Traditional Chinese",
+                "日语": "Japanese",
+                "韩语": "Korean",
+                "俄语": "Russian",
+                "法语": "French",
+                "德语": "German",
+                "西班牙语": "Spanish",
+                "葡萄牙语": "Portuguese",
+                "葡萄牙语（巴西）": "Portuguese (Brazil)",
+                "意大利语": "Italian",
+                "土耳其语": "Turkish",
+                "英语": "English",
+                // 如果有其他需要翻译的语言，可以在这里添加
+            };
+            return map[lang] || lang; // 如果没有映射，返回原值
+        }
+
+        window.addEventListener('message', event => {
+            const message = event.data;
+            if (message.command === 'setIdentifiers') {
+                if (message.targetLanguage) targetLanguage = message.targetLanguage;
+                if (message.targetLanguageName) targetLanguageName = message.targetLanguageName;
+            }
+        });
+        const copyToAIButton = document.getElementById('copyToAIButton');
+        if (copyToAIButton) {
+            copyToAIButton.addEventListener('click', () => {
+                const englishTargetLanguageName = getEnglishLanguageName(targetLanguageName);
+                const prompt = `Please help me translate the following JSON array of English identifiers into ${englishTargetLanguageName}.
+
+First, analyze the vocabulary to determine which industry or domain these terms belong to (e.g., software development, finance, healthcare, manufacturing, etc.). Based on the industry context, provide accurate and appropriate translations.
+
+Return a JSON array with the following fields for each element:
+- original: the original English identifier
+- translated: the ${englishTargetLanguageName} translation result (considering industry context)
+- type: always "identifier"
+- source: always "ai"
+
+If the identifier is not suitable for translation (e.g., technical abbreviations, already meaningful in ${englishTargetLanguageName}), set the translated field to be the same as the original.
+If the identifier is not a word or has no meaningful translation value, do not include it in the output.
+
+Please filter out meaningless identifiers such as:
+- Single letters or very short abbreviations without context
+- Common programming language keywords that don't need translation
+- File extensions and technical abbreviations
+- Grammatical suffixes and prefixes that don't stand alone
+- Non-words or random character combinations
+
+Please output the content in the format of an xxx.json file, but do not actually save the file—just provide the content. Please output only the JSON array in JSON file format, with no extra explanation or code block.`;
+                // 复制全部标识符
+                const identifiersToCopy = identifiers.slice();
+                const contentToCopy = prompt + JSON.stringify(identifiersToCopy, null, 2);
+                navigator.clipboard.writeText(contentToCopy)
+                    .then(() => {
+                        vscode.postMessage({ command: 'info', message: '已成功复制全部标识符到剪贴板！' });
+                        showInfoMessage('已成功复制全部标识符到剪贴板！');
+                    })
+                    .catch(err => {
+                        vscode.postMessage({ command: 'error', message: '复制失败: ' + err.message });
+                        showInfoMessage('复制失败: ' + err.message, true);
+                    });
+            });
+        }
+
+        // 信息提示框显示逻辑
+        function showInfoMessage(message, isError = false) {
+            const infoMessageDiv = document.getElementById('infoMessage');
+            infoMessageDiv.textContent = message;
+            infoMessageDiv.style.backgroundColor = isError ? '#f44336' : '#4CAF50';
+            infoMessageDiv.style.display = 'block';
+            setTimeout(() => {
+                infoMessageDiv.style.display = 'none';
+            }, 3000); // 3秒后隐藏
+        }
+
+        // 新增：翻译提交按钮和弹窗逻辑
+        const importAiBtn = document.getElementById('import-ai-btn');
+        const aiImportModal = document.getElementById('ai-import-modal');
+        const aiImportTextarea = document.getElementById('ai-import-textarea');
+        const aiImportConfirm = document.getElementById('ai-import-confirm');
+        const aiImportCancel = document.getElementById('ai-import-cancel');
+        const aiImportError = document.getElementById('ai-import-error');
+        const aiImportPasteBtn = document.getElementById('ai-import-paste');
+
+        if (importAiBtn) {
+            importAiBtn.addEventListener('click', () => {
+                aiImportModal.style.display = 'flex';
+                aiImportTextarea.value = '';
+                aiImportError.style.display = 'none';
+            });
+        }
+
+        if (aiImportCancel) {
+            aiImportCancel.addEventListener('click', () => {
+                aiImportModal.style.display = 'none';
+            });
+        }
+
+        if (aiImportPasteBtn) {
+            aiImportPasteBtn.addEventListener('click', async () => {
+                try {
+                    const text = await navigator.clipboard.readText();
+                    aiImportTextarea.value = text;
+                    aiImportError.style.display = 'none';
+                } catch (err) {
+                    aiImportError.textContent = '无法读取剪贴板内容，请确保已授予权限或手动粘贴。';
+                    aiImportError.style.display = 'block';
+                    console.error('Failed to read clipboard contents: ', err);
+                }
+            });
+        }
+
+        if (aiImportConfirm) {
+            aiImportConfirm.addEventListener('click', () => {
+                aiImportError.style.display = 'none';
+                let val = aiImportTextarea.value.trim();
+                if (!val) return;
+                try {
+                    let arr = JSON.parse(val);
+                    if (!Array.isArray(arr)) throw new Error('内容不是数组');
+                    // 合并到当前identifiers，去重（按original字段）
+                    const existSet = new Set(identifiers);
+                    arr.forEach(item => {
+                        if (item && item.original && !existSet.has(item.original)) {
+                            identifiers.push(item.original);
+                            existSet.add(item.original);
+                        }
+                    });
+                    aiImportModal.style.display = 'none';
+                    renderList();
+                    // 新增：推送到翻译结果页
+                    vscode.postMessage({
+                        command: 'importAiTranslations',
+                        translations: arr
+                    });
+                    vscode.postMessage({ command: 'closeCurrentWebview' }); // 新增：通知扩展关闭当前Webview
+                } catch(e) {
+                    aiImportError.textContent = '解析失败: ' + e.message;
+                    aiImportError.style.display = 'block';
+                }
+            });
+        }
+
+        // 保存当前状态
+        function saveState() {
+            vscode.setState({ modifiedIdentifiers: modifiedIdentifiers, deletedItems: deletedItems });
+        }
+
+        // 初始化列表
+        renderList();
+    </script>
+</body>
+</html> 

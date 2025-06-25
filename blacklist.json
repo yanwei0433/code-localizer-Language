@@ -1,0 +1,56 @@
+{
+  "technicalTerms": [
+    "python", "java", "javascript", "typescript", "php", "ruby", "go", "golang", "rust", "c", "cpp", "csharp",
+    "react", "vue", "angular", "node", "npm", "yarn", "webpack", "babel", "django", "flask", "spring", "laravel",
+    ".net", "dotnet", "unity", "swift", "kotlin", "scala", "perl", "lua", "julia", "haskell", "clojure",
+    
+    "api", "rest", "graphql", "json", "xml", "html", "css", "dom", "web", "ui", "ux", "db", "sql", "nosql", 
+    "mongo", "redis", "mysql", "postgres", "sqlite", "oracle", "aws", "azure", "gcp", "cloud", "docker", 
+    "kubernetes", "k8s", "git", "github", "gitlab", "heroku", "devops", "cicd", "ai", "ml", "dl",
+    
+    "http", "https", "ftp", "ssh", "tcp", "ip", "udp", "dns", "smtp", "imap", "pop3", "oauth", "jwt",
+    "ascii", "utf8", "utf16", "unicode", "iso", "ieee", "uri", "url", "urn", "mime", "tls", "ssl",
+    
+    "jpg", "jpeg", "png", "gif", "svg", "pdf", "doc", "docx", "xls", "xlsx", "csv", "md", "txt", "rtf",
+    "zip", "rar", "tar", "gz", "exe", "dll", "so", "lib", "jar", "war", "apk", "dmg", "iso",
+    
+    "id", "uuid", "guid", "crud", "mvc", "mvvm", "spa", "pwa", "sdk", "cli", "ide", "cdn", 
+    "seo", "ssr", "csr", "orm", "acid", "cap", "idl", "rpc", "ram", "rom", "cpu", "gpu", "iot",
+    
+    "scss", "sass", "less", "stylus", "postcss", "tailwind", "bootstrap", "bulma", "uikit", "mui",
+    "chakra", "mantine", "material", "ant", "elementui", "quasar", "vuetify", "nuxt", "next", "remix",
+    "astro", "svelte", "preact", "ember", "flex", "grid", "rgba", "hsla", "rgb", "hsl", "var",
+    "esp12f",
+    
+    "uni", "wx", "vant", "taro", "rn", "uview", "axios", "fetch", "lodash", "jquery", "moment",
+    "dayjs", "math", "md5", "sha", "uuid", "crypto", "util", "async", "env", "init",
+    
+    "vscode", "intellij", "webstorm", "eslint", "prettier", "stylelint", "jshint", "husky",
+    "lint", "jest", "mocha", "chai", "karma", "cypress", "msw", "storybook", "vite", "rollup"
+  ],
+  "ignoreList": [
+    "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", 
+    "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z",
+    "id", "db", "ui", "io", "os", "fs", "js", "ts", "rx", "ms", "ns",
+    "px", "fn", "ip", "ok", "el", "idx", "tmp", "img", "btn", "num", 
+    "obj", "src", "dst", "len", "pos", "val", "err", "res", "req",
+    "i", "j", "k", "x", "y", "z", "n"
+  ],
+  "meaningfulShortWords": [
+    "by", "to", "of", "in", "on", "at", "is", "as", "for", "if",
+    "def", "self", "len"
+  ],
+  "pythonKeywords": [
+    "class", "def", "self", "init", "__init__", "return", "len",
+    "list", "dict", "set", "tuple", "str", "int", "float", "bool",
+    "import", "from", "as", "try", "except", "finally",
+    "with", "yield", "lambda", "pass", "break", "continue"
+  ],
+  "customBlacklist": [],
+  "techSuffixes": [
+    "js", "ts", "db", "api", "sdk", "dto", "dao", "ui", "vm", "rc"
+  ],
+  "commonAbbr": [
+    "api", "sdk", "ui", "db", "os", "ip", "cpu", "gpu", "ram", "rom", "io", "vm", "qa", "dev", "ssr", "csr", "pwa", "spa", "mvc", "orm", "cdn", "dns", "tcp", "udp", "ssl", "tls", "jwt", "cli", "gui"
+  ]
+} 
